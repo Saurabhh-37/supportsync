@@ -88,38 +88,32 @@ def get_authenticated_user(current_user: User = Depends(get_current_active_user)
     return current_user
 
 # User management endpoints
-@router.get("/users", response_model=List[UserResponse])
+@auth_router.get("/users", response_model=List[UserResponse])
 def get_users(
     skip: int = 0,
     limit: int = 100,
+    role: str = None,
     db: Session = Depends(get_db),
     current_user: User = Depends(get_current_active_user)
 ):
     """Get all users (admin only)"""
+    print(f"Received role parameter: {role}")  # Debug log
     if current_user.role != "admin":
         raise HTTPException(
             status_code=status.HTTP_403_FORBIDDEN,
             detail="Not enough permissions"
         )
-    users = db.query(User).offset(skip).limit(limit).all()
+    
+    query = db.query(User)
+    if role:
+        print(f"Filtering users by role: {role}")  # Debug log
+        query = query.filter(User.role == role)
+    
+    users = query.offset(skip).limit(limit).all()
+    print(f"Returning {len(users)} users")  # Debug log
     return users
 
-@router.get("/users/admins", response_model=List[UserResponse])
-def get_admin_users(
-    db: Session = Depends(get_db),
-    current_user: User = Depends(get_current_active_user)
-):
-    """Get all admin users"""
-    if current_user.role != "admin":
-        raise HTTPException(
-            status_code=status.HTTP_403_FORBIDDEN,
-            detail="Not enough permissions"
-        )
-    admin_users = db.query(User).filter(User.role == "admin", User.is_active == True).all()
-    print(f"Found {len(admin_users)} admin users")  # Debug log
-    return admin_users
-
-@router.post("/users", response_model=UserResponse)
+@auth_router.post("/users", response_model=UserResponse)
 def create_user(
     user: UserCreate,
     db: Session = Depends(get_db),
@@ -160,7 +154,7 @@ def create_user(
     db.refresh(new_user)
     return new_user
 
-@router.put("/users/{user_id}", response_model=UserResponse)
+@auth_router.put("/users/{user_id}", response_model=UserResponse)
 def update_user(
     user_id: int,
     user_data: UserUpdate,
@@ -210,5 +204,20 @@ def update_user(
     db.refresh(user)
     return user
 
-# Include auth router under /auth prefix
-router.include_router(auth_router, prefix="/auth", tags=["Authentication"])
+@auth_router.get("/users/{user_id}", response_model=UserResponse)
+def get_user_by_id(
+    user_id: int,
+    db: Session = Depends(get_db),
+    current_user: User = Depends(get_current_active_user)
+):
+    """Get a user by ID"""
+    user = db.query(User).filter(User.id == user_id).first()
+    if not user:
+        raise HTTPException(
+            status_code=status.HTTP_404_NOT_FOUND,
+            detail="User not found"
+        )
+    return user
+
+# Export both routers
+__all__ = ["router", "auth_router"]

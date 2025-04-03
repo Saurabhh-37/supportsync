@@ -45,6 +45,13 @@ const FeatureRequestDetail = () => {
       setLoading(true);
       const response = await API.get(`/api/feature-requests/${id}`);
       const requestData = response.data;
+      
+      // Fetch requester details
+      if (requestData.requester_id) {
+        const requesterResponse = await API.get(`/api/auth/users/${requestData.requester_id}`);
+        requestData.requester = requesterResponse.data;
+      }
+      
       setFeatureRequest(requestData);
       setStatus(requestData.status || FEATURE_REQUEST_STATUS.PROPOSED);
       setPriority(requestData.priority || TICKET_PRIORITY.MEDIUM);
@@ -208,7 +215,12 @@ const FeatureRequestDetail = () => {
       <Paper sx={{ p: 3, mb: 3 }}>
         <Grid container spacing={3}>
           <Grid item xs={12} sx={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
-            <Typography variant="h5">{featureRequest.title}</Typography>
+            <Box>
+              <Typography variant="h5" sx={{ mb: 1 }}>{featureRequest.title}</Typography>
+              <Typography variant="body2" color="text.secondary">
+                Requested by: {featureRequest.requester?.username || 'Unknown'} • Created: {new Date(featureRequest.created_at).toLocaleString()}
+              </Typography>
+            </Box>
             <Box sx={{ display: 'flex', alignItems: 'center' }}>
               <Typography variant="body2" sx={{ mr: 1 }}>
                 {featureRequest.upvotes_count || 0} upvotes
@@ -224,7 +236,7 @@ const FeatureRequestDetail = () => {
           </Grid>
 
           <Grid item xs={12}>
-            <Typography variant="body1" color="text.secondary">
+            <Typography variant="body1">
               {featureRequest.description}
             </Typography>
           </Grid>
@@ -261,19 +273,6 @@ const FeatureRequestDetail = () => {
                 ))}
               </Select>
             </FormControl>
-          </Grid>
-
-          <Grid item xs={12} sm={6} md={3}>
-            <Typography variant="body2" color="text.secondary">
-              Requested by
-            </Typography>
-            <Typography>{featureRequest.requester?.username || 'Unknown'}</Typography>
-          </Grid>
-
-          <Grid item xs={12}>
-            <Typography variant="body2" color="text.secondary">
-              Created at: {new Date(featureRequest.created_at).toLocaleString()}
-            </Typography>
           </Grid>
         </Grid>
       </Paper>

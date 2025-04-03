@@ -20,6 +20,7 @@ import {
 import { Delete as DeleteIcon } from '@mui/icons-material';
 import { selectCurrentUser } from '../redux/userSlice';
 import API from '../api';
+import { users } from '../api';
 
 const TICKET_STATUS = {
   NEW: 'new',
@@ -55,14 +56,17 @@ const TicketDetail = () => {
   const fetchAdminUsers = async () => {
     try {
       console.log('Fetching admin users...');
-      const response = await API.get('/api/users/admins');
+      const response = await users.getAll({ role: 'admin' });
       console.log('Admin users response:', response.data);
       
       if (response.data && Array.isArray(response.data)) {
-        const admins = response.data.map(admin => ({
-          id: admin.id,
-          username: admin.username
-        }));
+        // Filter the response to only include admin users
+        const admins = response.data
+          .filter(user => user.role === 'admin')
+          .map(admin => ({
+            id: admin.id,
+            username: admin.username
+          }));
         console.log('Processed admin users:', admins);
         setAdminUsers(admins);
       } else {
@@ -82,10 +86,12 @@ const TicketDetail = () => {
       setLoading(true);
       const response = await API.get(`/api/tickets/${id}`);
       const ticketData = response.data;
+      console.log('Ticket data:', ticketData); // Debug log
       setTicket(ticketData);
       setStatus(ticketData.status);
       setPriority(ticketData.priority);
-      setSelectedAdmin(ticketData.assigned_user?.id || '');
+      // Set the selected admin from the assigned_to field
+      setSelectedAdmin(ticketData.assigned_to || '');
       setComments(ticketData.comments || []);
       setError(null);
     } catch (error) {
@@ -108,7 +114,12 @@ const TicketDetail = () => {
     try {
       setUpdating(true);
       const response = await API.put(`/api/tickets/${id}`, updateData);
-      setTicket(response.data);
+      const updatedTicket = response.data;
+      setTicket(updatedTicket);
+      // Update the selected admin if we're updating the assignment
+      if ('assigned_to' in updateData) {
+        setSelectedAdmin(updateData.assigned_to);
+      }
       setError(null);
     } catch (error) {
       console.error('Error updating ticket:', error);
@@ -166,6 +177,7 @@ const TicketDetail = () => {
   // Handle admin assignment
   const handleAdminChange = async (event) => {
     const newAdminId = event.target.value;
+    console.log('New admin ID:', newAdminId); // Debug log
     setSelectedAdmin(newAdminId);
     try {
       await updateTicket({ assigned_to: newAdminId });
@@ -282,14 +294,14 @@ const TicketDetail = () => {
             </Typography>
             {currentUser.role === 'admin' ? (
               <FormControl fullWidth disabled={!canEditTicket || updating}>
-                <InputLabel>Assigned To</InputLabel>
+                <InputLabel>Change Assignment</InputLabel>
                 <Select
                   value={selectedAdmin}
                   onChange={handleAdminChange}
-                  label="Assigned To"
+                  label="Change Assignment"
                 >
                   <MenuItem value="">
-                    <em>Unassigned</em>
+                    <em>Unassign</em>
                   </MenuItem>
                   {adminUsers && adminUsers.length > 0 ? (
                     adminUsers.map((admin) => (
@@ -304,7 +316,7 @@ const TicketDetail = () => {
               </FormControl>
             ) : (
               <Typography>
-                {ticket.assigned_user?.username || 'Unassigned'}
+                {ticket.assigned_to ? adminUsers.find(admin => admin.id === ticket.assigned_to)?.username || 'Unknown' : 'Unassigned'}
               </Typography>
             )}
           </Grid>

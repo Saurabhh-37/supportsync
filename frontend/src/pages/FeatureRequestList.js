@@ -80,7 +80,29 @@ const FeatureRequestList = () => {
       const response = await API.get('/api/feature-requests', { params });
       console.log('API Response:', response);
       
-      dispatch(setFeatureRequests(response.data));
+      // Fetch requester details for each feature request
+      const requestsWithRequesterDetails = await Promise.all(
+        response.data.map(async (request) => {
+          if (request.requester_id) {
+            try {
+              const requesterResponse = await API.get(`/api/auth/users/${request.requester_id}`);
+              return {
+                ...request,
+                requester: requesterResponse.data
+              };
+            } catch (error) {
+              console.error(`Error fetching requester details for request ${request.id}:`, error);
+              return {
+                ...request,
+                requester: { username: 'Unknown' }
+              };
+            }
+          }
+          return request;
+        })
+      );
+      
+      dispatch(setFeatureRequests(requestsWithRequesterDetails));
       dispatch(setError(null));
     } catch (error) {
       console.error('Error fetching feature requests:', error);
@@ -220,17 +242,17 @@ const FeatureRequestList = () => {
                     <ThumbUpIcon />
                   </IconButton>
                   {isAgent && (
-                    <IconButton
-                      size="small"
-                      color="error"
-                      onClick={(e) => {
-                        e.stopPropagation();
-                        handleDelete(request.id);
-                      }}
-                      disabled={updating}
-                    >
-                      <DeleteIcon />
-                    </IconButton>
+                      <IconButton
+                        size="small"
+                        color="error"
+                        onClick={(e) => {
+                          e.stopPropagation();
+                          handleDelete(request.id);
+                        }}
+                        disabled={updating}
+                      >
+                        <DeleteIcon />
+                      </IconButton>
                   )}
                 </TableCell>
               </TableRow>

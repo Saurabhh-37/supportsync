@@ -64,7 +64,7 @@ const UserManagementPage = () => {
     try {
       setLoading(true);
       setError(null);
-      const response = await API.get('/api/users');
+      const response = await API.get('/api/auth/users');
       if (response.data && Array.isArray(response.data)) {
         setUsers(response.data);
       } else {
@@ -122,10 +122,10 @@ const UserManagementPage = () => {
     e.preventDefault();
     try {
       if (editingUser) {
-        await API.put(`/api/users/${editingUser.id}`, formData);
+        await API.put(`/api/auth/users/${editingUser.id}`, formData);
         setSuccessMessage('User updated successfully');
       } else {
-        await API.post('/api/users', formData);
+        await API.post('/api/auth/users', formData);
         setSuccessMessage('User created successfully');
       }
       handleCloseDialog();
@@ -139,7 +139,7 @@ const UserManagementPage = () => {
   const handleDelete = async (userId) => {
     if (window.confirm('Are you sure you want to delete this user?')) {
       try {
-        await API.delete(`/api/users/${userId}`);
+        await API.delete(`/api/auth/users/${userId}`);
         setSuccessMessage('User deleted successfully');
         fetchUsers();
       } catch (err) {

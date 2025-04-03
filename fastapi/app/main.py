@@ -30,6 +30,7 @@ async def startup_event():
 # Include routers
 app.include_router(health.router, prefix="/api", tags=["Health"])
 app.include_router(user.router, prefix="/api", tags=["Authentication & Users"])
+app.include_router(user.auth_router, prefix="/api/auth", tags=["Authentication"])
 app.include_router(ticket.router, prefix="/api", tags=["Tickets"])
 app.include_router(comment.router, prefix="/api", tags=["Comments"])
 app.include_router(feature_request.router, prefix="/api", tags=["Feature Requests"])

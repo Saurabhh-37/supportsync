@@ -57,18 +57,36 @@ const TicketManagement = () => {
         response = await ticketService.getUserTickets(currentUser.id);
       }
       
-      console.log('Fetched tickets:', response); // Debug log
-      // Add detailed logging for each ticket
-      response.forEach(ticket => {
-        console.log(`\nTicket ${ticket.id}:`);
-        console.log('  Title:', ticket.title);
-        console.log('  User:', ticket.user);
-        console.log('  User ID:', ticket.user_id);
-        console.log('  Assigned User:', ticket.assigned_user);
-        console.log('  Assigned To ID:', ticket.assigned_to);
+      console.log('Raw response from backend:', JSON.stringify(response, null, 2));
+      
+      // Process the response to ensure user data is properly structured
+      const processedTickets = response.map(ticket => {
+        console.log('Processing ticket:', {
+          id: ticket.id,
+          user: ticket.user,
+          user_id: ticket.user_id,
+          assigned_user: ticket.assigned_user,
+          assigned_to: ticket.assigned_to,
+          rawTicket: JSON.stringify(ticket, null, 2)
+        });
+        
+        // Ensure user data is properly structured
+        const processedTicket = {
+          ...ticket,
+          user: ticket.user || { username: 'Unknown', id: ticket.user_id },
+          assigned_user: ticket.assigned_user || { username: 'Unassigned', id: ticket.assigned_to }
+        };
+        
+        console.log('Processed ticket:', {
+          id: processedTicket.id,
+          user: processedTicket.user,
+          assigned_user: processedTicket.assigned_user
+        });
+        
+        return processedTicket;
       });
       
-      setTickets(response);
+      setTickets(processedTickets);
     } catch (err) {
       const errorMessage = err.detail || err.message || 'Failed to fetch tickets';
       setError(errorMessage);
@@ -271,7 +289,13 @@ const TicketManagement = () => {
                   </TableCell>
                   {isAdmin && (
                     <TableCell>
-                      {console.log('Ticket user data:', ticket.user)} {/* Debug log */}
+                      {console.log('Rendering ticket user data:', {
+                        ticketId: ticket.id,
+                        user: ticket.user,
+                        username: ticket.user?.username,
+                        rawUser: JSON.stringify(ticket.user, null, 2),
+                        fullTicket: JSON.stringify(ticket, null, 2)
+                      })}
                       {ticket.user?.username || 'Unknown'}
                     </TableCell>
                   )}

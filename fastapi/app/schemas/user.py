@@ -8,6 +8,7 @@ class UserBase(BaseModel):
 
 class UserCreate(UserBase):
     password: str
+    role: Optional[str] = "user"  # Default to "user" if not provided
 
 class UserLogin(BaseModel):
     email: EmailStr

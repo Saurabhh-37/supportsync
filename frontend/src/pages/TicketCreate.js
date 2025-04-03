@@ -49,7 +49,6 @@ const TicketCreate = () => {
     description: '',
     priority: TICKET_PRIORITY.MEDIUM,
     status: TICKET_STATUS.NEW,
-    assignedUserId: '',
   });
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState(null);
@@ -95,10 +94,6 @@ const TicketCreate = () => {
       errors.push('Description is required');
     } else if (formData.description.length < 10) {
       errors.push('Description must be at least 10 characters');
-    }
-
-    if (!formData.assignedUserId) {
-      errors.push('Please assign the ticket to someone');
     }
 
     if (errors.length > 0) {
@@ -169,7 +164,6 @@ const TicketCreate = () => {
         description: formData.description.trim(),
         priority: formData.priority,
         status: formData.status,
-        assignedUserId: formData.assignedUserId,
         attachmentIds: attachments.map(att => att.id), // Add attachment IDs to ticket creation
       });
       
@@ -202,11 +196,6 @@ const TicketCreate = () => {
       setLoading(false);
     }
   };
-
-  // Filter users to only show admins and agents for assignment
-  const assignableUsers = mockUsers.filter(user => 
-    user.role === 'admin' || user.role === 'agent'
-  );
 
   return (
     <Box sx={{ p: 3 }}>
@@ -271,32 +260,6 @@ const TicketCreate = () => {
                     </MenuItem>
                   ))}
                 </Select>
-              </FormControl>
-            </Grid>
-
-            <Grid item xs={12} sm={6}>
-              <FormControl fullWidth>
-                <InputLabel>Assign To</InputLabel>
-                <Select
-                  name="assignedUserId"
-                  value={formData.assignedUserId}
-                  onChange={handleChange}
-                  label="Assign To"
-                  required
-                  disabled={loading}
-                  error={error && !formData.assignedUserId}
-                >
-                  {assignableUsers.map((user) => (
-                    <MenuItem key={user.id} value={user.id}>
-                      {user.name}
-                    </MenuItem>
-                  ))}
-                </Select>
-                {error && !formData.assignedUserId && (
-                  <Typography color="error" variant="caption">
-                    Please assign the ticket to someone
-                  </Typography>
-                )}
               </FormControl>
             </Grid>
 

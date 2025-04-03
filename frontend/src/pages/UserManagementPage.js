@@ -48,8 +48,8 @@ const UserManagementPage = () => {
   const [formData, setFormData] = useState({
     username: '',
     email: '',
-    role: 'USER',
-    full_name: '',
+    password: '',
+    role: 'user',
   });
 
   useEffect(() => {
@@ -64,7 +64,7 @@ const UserManagementPage = () => {
     try {
       setLoading(true);
       setError(null);
-      const response = await API.get('/api/auth/users');
+      const response = await API.get('/api/users');
       if (response.data && Array.isArray(response.data)) {
         setUsers(response.data);
       } else {
@@ -84,16 +84,16 @@ const UserManagementPage = () => {
       setFormData({
         username: user.username,
         email: user.email,
-        role: user.role,
-        full_name: user.full_name,
+        password: '',
+        role: user.role.toLowerCase(),
       });
     } else {
       setEditingUser(null);
       setFormData({
         username: '',
         email: '',
-        role: 'USER',
-        full_name: '',
+        password: '',
+        role: 'user',
       });
     }
     setOpenDialog(true);
@@ -105,8 +105,8 @@ const UserManagementPage = () => {
     setFormData({
       username: '',
       email: '',
-      role: 'USER',
-      full_name: '',
+      password: '',
+      role: 'user',
     });
   };
 
@@ -122,10 +122,10 @@ const UserManagementPage = () => {
     e.preventDefault();
     try {
       if (editingUser) {
-        await API.put(`/api/auth/users/${editingUser.id}`, formData);
+        await API.put(`/api/users/${editingUser.id}`, formData);
         setSuccessMessage('User updated successfully');
       } else {
-        await API.post('/api/auth/users', formData);
+        await API.post('/api/users', formData);
         setSuccessMessage('User created successfully');
       }
       handleCloseDialog();
@@ -139,7 +139,7 @@ const UserManagementPage = () => {
   const handleDelete = async (userId) => {
     if (window.confirm('Are you sure you want to delete this user?')) {
       try {
-        await API.delete(`/api/auth/users/${userId}`);
+        await API.delete(`/api/users/${userId}`);
         setSuccessMessage('User deleted successfully');
         fetchUsers();
       } catch (err) {
@@ -194,7 +194,6 @@ const UserManagementPage = () => {
             <TableRow>
               <TableCell>Username</TableCell>
               <TableCell>Email</TableCell>
-              <TableCell>Full Name</TableCell>
               <TableCell>Role</TableCell>
               <TableCell>Actions</TableCell>
             </TableRow>
@@ -204,7 +203,6 @@ const UserManagementPage = () => {
               <TableRow key={user.id}>
                 <TableCell>{user.username}</TableCell>
                 <TableCell>{user.email}</TableCell>
-                <TableCell>{user.full_name}</TableCell>
                 <TableCell>{user.role}</TableCell>
                 <TableCell>
                   <IconButton
@@ -253,12 +251,14 @@ const UserManagementPage = () => {
             />
             <TextField
               fullWidth
-              label="Full Name"
-              name="full_name"
-              value={formData.full_name}
+              label="Password"
+              name="password"
+              type="password"
+              value={formData.password}
               onChange={handleChange}
               margin="normal"
-              required
+              required={!editingUser}
+              helperText={editingUser ? "Leave blank to keep current password" : ""}
             />
             <FormControl fullWidth margin="normal">
               <InputLabel>Role</InputLabel>
@@ -268,8 +268,8 @@ const UserManagementPage = () => {
                 onChange={handleChange}
                 label="Role"
               >
-                <MenuItem value="USER">User</MenuItem>
-                <MenuItem value="ADMIN">Admin</MenuItem>
+                <MenuItem value="user">User</MenuItem>
+                <MenuItem value="admin">Admin</MenuItem>
               </Select>
             </FormControl>
           </DialogContent>

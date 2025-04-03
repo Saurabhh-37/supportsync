@@ -1,0 +1,12 @@
+Backend:
+Why FastAPI over Flask/Django?
+How do you handle database migrations?
+Explain your API design principles
+Frontend:
+Why Redux over Context API?
+How do you handle component reusability?
+Explain your state management approach
+General:
+How do you ensure code quality?
+How do you handle security?
+How do you approach testing?

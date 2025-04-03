@@ -93,10 +93,10 @@ export const featureRequests = {
 
 // Users API
 export const users = {
-  getAll: () => api.get('/users'),
-  getById: (id) => api.get(`/users/${id}`),
-  update: (id, userData) => api.put(`/users/${id}`, userData),
-  delete: (id) => api.delete(`/users/${id}`),
+  getAll: () => api.get('/api/users'),
+  getById: (id) => api.get(`/api/users/${id}`),
+  update: (id, userData) => api.put(`/api/users/${id}`, userData),
+  delete: (id) => api.delete(`/api/users/${id}`),
 };
 
 export default api; 

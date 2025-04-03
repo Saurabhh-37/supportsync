@@ -48,6 +48,33 @@ const TicketDetail = () => {
   const [priority, setPriority] = useState('');
   const [comments, setComments] = useState([]);
   const [updating, setUpdating] = useState(false);
+  const [adminUsers, setAdminUsers] = useState([]);
+  const [selectedAdmin, setSelectedAdmin] = useState('');
+
+  // Fetch admin users
+  const fetchAdminUsers = async () => {
+    try {
+      console.log('Fetching admin users...');
+      const response = await API.get('/api/users/admins');
+      console.log('Admin users response:', response.data);
+      
+      if (response.data && Array.isArray(response.data)) {
+        const admins = response.data.map(admin => ({
+          id: admin.id,
+          username: admin.username
+        }));
+        console.log('Processed admin users:', admins);
+        setAdminUsers(admins);
+      } else {
+        console.error('Invalid response format:', response.data);
+        setError('Invalid response format from server');
+      }
+    } catch (error) {
+      console.error('Error fetching admin users:', error);
+      console.error('Error response:', error.response);
+      setError(error.response?.data?.detail || 'Failed to fetch admin users');
+    }
+  };
 
   // Fetch ticket details
   const fetchTicketDetails = async () => {
@@ -58,6 +85,7 @@ const TicketDetail = () => {
       setTicket(ticketData);
       setStatus(ticketData.status);
       setPriority(ticketData.priority);
+      setSelectedAdmin(ticketData.assigned_user?.id || '');
       setComments(ticketData.comments || []);
       setError(null);
     } catch (error) {
@@ -68,9 +96,11 @@ const TicketDetail = () => {
     }
   };
 
-  // Fetch ticket details on component mount
+  // Fetch ticket details and admin users on component mount
   useEffect(() => {
+    console.log('Component mounted, fetching data...');
     fetchTicketDetails();
+    fetchAdminUsers();
   }, [id]);
 
   // Update ticket
@@ -130,6 +160,18 @@ const TicketDetail = () => {
         console.error('Error deleting ticket:', error);
         setError(error.response?.data?.detail || 'Failed to delete ticket');
       }
+    }
+  };
+
+  // Handle admin assignment
+  const handleAdminChange = async (event) => {
+    const newAdminId = event.target.value;
+    setSelectedAdmin(newAdminId);
+    try {
+      await updateTicket({ assigned_to: newAdminId });
+    } catch (error) {
+      console.error('Error updating assigned admin:', error);
+      setError(error.response?.data?.detail || 'Failed to update assigned admin');
     }
   };
 
@@ -236,16 +278,42 @@ const TicketDetail = () => {
 
           <Grid item xs={12} sm={6} md={3}>
             <Typography variant="body2" color="text.secondary">
-              Created by
+              Assigned To
             </Typography>
-            <Typography>{ticket.user?.username || 'Unknown'}</Typography>
+            {currentUser.role === 'admin' ? (
+              <FormControl fullWidth disabled={!canEditTicket || updating}>
+                <InputLabel>Assigned To</InputLabel>
+                <Select
+                  value={selectedAdmin}
+                  onChange={handleAdminChange}
+                  label="Assigned To"
+                >
+                  <MenuItem value="">
+                    <em>Unassigned</em>
+                  </MenuItem>
+                  {adminUsers && adminUsers.length > 0 ? (
+                    adminUsers.map((admin) => (
+                      <MenuItem key={admin.id} value={admin.id}>
+                        {admin.username}
+                      </MenuItem>
+                    ))
+                  ) : (
+                    <MenuItem disabled>No admins available</MenuItem>
+                  )}
+                </Select>
+              </FormControl>
+            ) : (
+              <Typography>
+                {ticket.assigned_user?.username || 'Unassigned'}
+              </Typography>
+            )}
           </Grid>
 
           <Grid item xs={12} sm={6} md={3}>
             <Typography variant="body2" color="text.secondary">
-              Assigned to
+              Created by
             </Typography>
-            <Typography>{ticket.assigned_user?.username || 'Unassigned'}</Typography>
+            <Typography>{ticket.user?.username || 'Unknown'}</Typography>
           </Grid>
 
           <Grid item xs={12}>

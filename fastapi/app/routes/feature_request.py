@@ -60,6 +60,10 @@ def get_feature_requests(
     total = query.count()
     requests = query.offset(skip).limit(limit).all()
     
+    # Load requester relationships
+    for request in requests:
+        request.requester = db.query(User).filter(User.id == request.requester_id).first()
+    
     return requests
 
 @router.get("/feature-requests/{request_id}", response_model=FeatureRequestWithComments)
@@ -76,6 +80,9 @@ def get_feature_request(
             status_code=status.HTTP_404_NOT_FOUND,
             detail="Feature request not found"
         )
+    
+    # Load requester relationship
+    request.requester = db.query(User).filter(User.id == request.requester_id).first()
     
     return request
 

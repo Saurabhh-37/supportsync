@@ -1,4 +1,5 @@
 import React, { useState, useEffect } from 'react';
+import { useNavigate } from 'react-router-dom';
 import {
   Box,
   Paper,
@@ -27,6 +28,7 @@ import { selectIsAdmin } from '../../redux/userSlice';
 import featureRequestService from '../../services/featureRequestService';
 
 const FeatureRequestManagement = () => {
+  const navigate = useNavigate();
   const isAdmin = useSelector(selectIsAdmin);
   const [featureRequests, setFeatureRequests] = useState([]);
   const [loading, setLoading] = useState(true);
@@ -181,7 +183,7 @@ const FeatureRequestManagement = () => {
                       size="small"
                     />
                   </TableCell>
-                  <TableCell>{request.created_by}</TableCell>
+                  <TableCell>{request.requester?.username || 'Unknown'}</TableCell>
                   <TableCell>
                     {selectedRequest === request.id ? (
                       <Box sx={{ display: 'flex', gap: 1, alignItems: 'center' }}>
@@ -243,7 +245,7 @@ const FeatureRequestManagement = () => {
                     <Button
                       variant="outlined"
                       size="small"
-                      onClick={() => {/* Handle view details */}}
+                      onClick={() => navigate(`/feature-requests/${request.id}`)}
                     >
                       View
                     </Button>

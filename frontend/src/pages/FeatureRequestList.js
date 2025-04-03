@@ -220,29 +220,17 @@ const FeatureRequestList = () => {
                     <ThumbUpIcon />
                   </IconButton>
                   {isAgent && (
-                    <>
-                      <IconButton
-                        size="small"
-                        onClick={(e) => {
-                          e.stopPropagation();
-                          navigate(`/feature-requests/${request.id}/edit`);
-                        }}
-                        disabled={updating}
-                      >
-                        <EditIcon />
-                      </IconButton>
-                      <IconButton
-                        size="small"
-                        color="error"
-                        onClick={(e) => {
-                          e.stopPropagation();
-                          handleDelete(request.id);
-                        }}
-                        disabled={updating}
-                      >
-                        <DeleteIcon />
-                      </IconButton>
-                    </>
+                    <IconButton
+                      size="small"
+                      color="error"
+                      onClick={(e) => {
+                        e.stopPropagation();
+                        handleDelete(request.id);
+                      }}
+                      disabled={updating}
+                    >
+                      <DeleteIcon />
+                    </IconButton>
                   )}
                 </TableCell>
               </TableRow>

@@ -14,6 +14,14 @@ class Status(str, Enum):
     RESOLVED = "resolved"
     CLOSED = "closed"
 
+class UserBase(BaseModel):
+    id: int
+    username: str
+    email: str
+
+    class Config:
+        from_attributes = True
+
 class TicketBase(BaseModel):
     title: str = Field(..., min_length=1, max_length=200)
     description: str = Field(..., min_length=1)
@@ -36,6 +44,8 @@ class TicketResponse(TicketBase):
     updated_at: datetime
     user_id: int
     assigned_to: Optional[int] = None
+    assigned_user: Optional[UserBase] = None
+    user: Optional[UserBase] = None
 
     class Config:
         from_attributes = True

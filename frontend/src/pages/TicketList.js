@@ -169,7 +169,6 @@ const TicketList = () => {
               <TableCell sx={{ fontWeight: 600 }}>Title</TableCell>
               <TableCell sx={{ fontWeight: 600 }}>Status</TableCell>
               <TableCell sx={{ fontWeight: 600 }}>Priority</TableCell>
-              <TableCell sx={{ fontWeight: 600 }}>Assigned To</TableCell>
               <TableCell sx={{ fontWeight: 600 }}>Created</TableCell>
               <TableCell align="right" sx={{ fontWeight: 600 }}>Actions</TableCell>
             </TableRow>
@@ -193,12 +192,6 @@ const TicketList = () => {
                 </TableCell>
                 <TableCell>
                   <PriorityBadge priority={ticket.priority} />
-                </TableCell>
-                <TableCell>
-                  <Box sx={{ display: 'flex', alignItems: 'center', gap: 1 }}>
-                    <AssignmentIcon sx={{ fontSize: 16, color: 'text.secondary' }} />
-                    {ticket.assigned_user?.username || 'Unassigned'}
-                  </Box>
                 </TableCell>
                 <TableCell>
                   {new Date(ticket.created_at).toLocaleDateString()}

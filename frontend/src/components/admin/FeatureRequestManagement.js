@@ -10,19 +10,13 @@ import {
   TableHead,
   TableRow,
   Button,
-  MenuItem,
-  Select,
-  FormControl,
-  InputLabel,
   Typography,
   Chip,
-  IconButton,
-  Tooltip,
   CircularProgress,
   Alert,
   TextField,
 } from '@mui/material';
-import { Edit as EditIcon, Search as SearchIcon, ThumbUp as ThumbUpIcon } from '@mui/icons-material';
+import { Search as SearchIcon } from '@mui/icons-material';
 import { useSelector } from 'react-redux';
 import { selectIsAdmin } from '../../redux/userSlice';
 import featureRequestService from '../../services/featureRequestService';
@@ -33,8 +27,6 @@ const FeatureRequestManagement = () => {
   const [featureRequests, setFeatureRequests] = useState([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
-  const [selectedRequest, setSelectedRequest] = useState(null);
-  const [selectedAgent, setSelectedAgent] = useState('');
   const [searchQuery, setSearchQuery] = useState('');
 
   useEffect(() => {
@@ -52,22 +44,6 @@ const FeatureRequestManagement = () => {
       console.error('Error fetching feature requests:', err);
     } finally {
       setLoading(false);
-    }
-  };
-
-  const handleAssignAgent = async (requestId) => {
-    try {
-      await featureRequestService.update(requestId, {
-        assigned_to: selectedAgent
-      });
-      
-      // Refresh requests after assignment
-      fetchFeatureRequests();
-      setSelectedRequest(null);
-      setSelectedAgent('');
-    } catch (err) {
-      setError(err.detail || 'Failed to assign agent');
-      console.error('Error assigning agent:', err);
     }
   };
 
@@ -157,8 +133,6 @@ const FeatureRequestManagement = () => {
                 <TableCell>Title</TableCell>
                 <TableCell>Status</TableCell>
                 <TableCell>Priority</TableCell>
-                <TableCell>Created By</TableCell>
-                <TableCell>Assigned To</TableCell>
                 <TableCell>Upvotes</TableCell>
                 <TableCell>Created At</TableCell>
                 <TableCell>Actions</TableCell>
@@ -183,61 +157,7 @@ const FeatureRequestManagement = () => {
                       size="small"
                     />
                   </TableCell>
-                  <TableCell>{request.requester?.username || 'Unknown'}</TableCell>
-                  <TableCell>
-                    {selectedRequest === request.id ? (
-                      <Box sx={{ display: 'flex', gap: 1, alignItems: 'center' }}>
-                        <FormControl size="small" sx={{ minWidth: 120 }}>
-                          <InputLabel>Select Agent</InputLabel>
-                          <Select
-                            value={selectedAgent}
-                            onChange={(e) => setSelectedAgent(e.target.value)}
-                            label="Select Agent"
-                          >
-                            <MenuItem value="">None</MenuItem>
-                            {/* Add actual agents list here when available */}
-                          </Select>
-                        </FormControl>
-                        <Button
-                          variant="contained"
-                          size="small"
-                          onClick={() => handleAssignAgent(request.id)}
-                        >
-                          Assign
-                        </Button>
-                        <Button
-                          variant="outlined"
-                          size="small"
-                          onClick={() => {
-                            setSelectedRequest(null);
-                            setSelectedAgent('');
-                          }}
-                        >
-                          Cancel
-                        </Button>
-                      </Box>
-                    ) : (
-                      <Box sx={{ display: 'flex', alignItems: 'center', gap: 1 }}>
-                        <Typography>
-                          {request.assigned_to || 'Unassigned'}
-                        </Typography>
-                        <Tooltip title="Assign Agent">
-                          <IconButton
-                            size="small"
-                            onClick={() => setSelectedRequest(request.id)}
-                          >
-                            <EditIcon />
-                          </IconButton>
-                        </Tooltip>
-                      </Box>
-                    )}
-                  </TableCell>
-                  <TableCell>
-                    <Box sx={{ display: 'flex', alignItems: 'center', gap: 0.5 }}>
-                      <ThumbUpIcon fontSize="small" color="primary" />
-                      <Typography>{request.upvotes || 0}</Typography>
-                    </Box>
-                  </TableCell>
+                  <TableCell>{request.upvotes_count || 0}</TableCell>
                   <TableCell>
                     {new Date(request.created_at).toLocaleDateString()}
                   </TableCell>

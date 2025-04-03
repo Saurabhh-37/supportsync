@@ -13,16 +13,13 @@ import {
   MenuItem,
   Select,
   FormControl,
-  InputLabel,
   Typography,
   Chip,
-  IconButton,
-  Tooltip,
   CircularProgress,
   Alert,
   TextField,
 } from '@mui/material';
-import { Edit as EditIcon, Search as SearchIcon } from '@mui/icons-material';
+import { Search as SearchIcon } from '@mui/icons-material';
 import { useSelector } from 'react-redux';
 import { selectIsAdmin, selectCurrentUser } from '../../redux/userSlice';
 import ticketService from '../../services/ticketService';
@@ -34,8 +31,6 @@ const TicketManagement = () => {
   const [tickets, setTickets] = useState([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
-  const [selectedTicket, setSelectedTicket] = useState(null);
-  const [selectedAgent, setSelectedAgent] = useState('');
   const [searchQuery, setSearchQuery] = useState('');
 
   useEffect(() => {
@@ -93,24 +88,6 @@ const TicketManagement = () => {
       console.error('Error fetching tickets:', err);
     } finally {
       setLoading(false);
-    }
-  };
-
-  const handleAssignAgent = async (ticketId) => {
-    try {
-      await ticketService.updateTicket(ticketId, {
-        assigned_to: selectedAgent
-      });
-      
-      // Refresh tickets after assignment
-      fetchTickets();
-      setSelectedTicket(null);
-      setSelectedAgent('');
-    } catch (err) {
-      // Extract error message from the error object
-      const errorMessage = err.detail || err.message || 'Failed to assign agent';
-      setError(errorMessage);
-      console.error('Error assigning agent:', err);
     }
   };
 
@@ -228,8 +205,6 @@ const TicketManagement = () => {
                 <TableCell>Title</TableCell>
                 <TableCell>Status</TableCell>
                 <TableCell>Priority</TableCell>
-                {isAdmin && <TableCell>Created By</TableCell>}
-                {isAdmin && <TableCell>Assigned To</TableCell>}
                 <TableCell>Created At</TableCell>
                 <TableCell>Actions</TableCell>
               </TableRow>
@@ -287,68 +262,6 @@ const TicketManagement = () => {
                       size="small"
                     />
                   </TableCell>
-                  {isAdmin && (
-                    <TableCell>
-                      {console.log('Rendering ticket user data:', {
-                        ticketId: ticket.id,
-                        user: ticket.user,
-                        username: ticket.user?.username,
-                        rawUser: JSON.stringify(ticket.user, null, 2),
-                        fullTicket: JSON.stringify(ticket, null, 2)
-                      })}
-                      {ticket.user?.username || 'Unknown'}
-                    </TableCell>
-                  )}
-                  {isAdmin && (
-                    <TableCell>
-                      {selectedTicket === ticket.id ? (
-                        <Box sx={{ display: 'flex', gap: 1, alignItems: 'center' }}>
-                          <FormControl size="small" sx={{ minWidth: 120 }}>
-                            <InputLabel>Select Agent</InputLabel>
-                            <Select
-                              value={selectedAgent}
-                              onChange={(e) => setSelectedAgent(e.target.value)}
-                              label="Select Agent"
-                            >
-                              <MenuItem value="">None</MenuItem>
-                              {/* Add actual agents list here when available */}
-                            </Select>
-                          </FormControl>
-                          <Button
-                            variant="contained"
-                            size="small"
-                            onClick={() => handleAssignAgent(ticket.id)}
-                          >
-                            Assign
-                          </Button>
-                          <Button
-                            variant="outlined"
-                            size="small"
-                            onClick={() => {
-                              setSelectedTicket(null);
-                              setSelectedAgent('');
-                            }}
-                          >
-                            Cancel
-                          </Button>
-                        </Box>
-                      ) : (
-                        <Box sx={{ display: 'flex', alignItems: 'center', gap: 1 }}>
-                          <Typography>
-                            {ticket.assigned_user?.username || 'Unassigned'}
-                          </Typography>
-                          <Tooltip title="Assign Agent">
-                            <IconButton
-                              size="small"
-                              onClick={() => setSelectedTicket(ticket.id)}
-                            >
-                              <EditIcon />
-                            </IconButton>
-                          </Tooltip>
-                        </Box>
-                      )}
-                    </TableCell>
-                  )}
                   <TableCell>
                     {new Date(ticket.created_at).toLocaleDateString()}
                   </TableCell>

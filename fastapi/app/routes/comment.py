@@ -1,5 +1,5 @@
 from fastapi import APIRouter, Depends, HTTPException, status
-from sqlalchemy.orm import Session
+from sqlalchemy.orm import Session, joinedload
 from app.database import get_db
 from app.models.comment import Comment
 from app.models.ticket import Ticket
@@ -66,5 +66,18 @@ def get_ticket_comments(
             detail="Not enough permissions"
         )
     
-    comments = db.query(Comment).filter(Comment.ticket_id == ticket_id).all()
+    # Get comments with eager loading of user relationships
+    comments = db.query(Comment).options(
+        joinedload(Comment.user)
+    ).filter(Comment.ticket_id == ticket_id).all()
+    
+    # Detailed debug logging for comments
+    print(f"\nComments for Ticket {ticket_id}:")
+    for comment in comments:
+        print(f"\nComment {comment.id}:")
+        print(f"  Content: {comment.content}")
+        print(f"  User: {comment.user.username if comment.user else 'None'}")
+        print(f"  User ID: {comment.user_id}")
+        print(f"  Created At: {comment.created_at}")
+    
     return comments

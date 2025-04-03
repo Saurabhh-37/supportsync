@@ -3,10 +3,32 @@ from datetime import datetime
 from typing import Optional
 
 class UserBase(BaseModel):
+    id: int
     username: str
     email: EmailStr
+    role: str
+    is_active: bool = True
+    created_at: datetime
+    updated_at: datetime
 
-class UserCreate(UserBase):
+    class Config:
+        from_attributes = True
+        populate_by_name = True
+        json_encoders = {
+            datetime: lambda v: v.isoformat()
+        }
+        
+        # Add debug logging for model creation
+        def dict(self, *args, **kwargs):
+            d = super().dict(*args, **kwargs)
+            print(f"\n=== UserBase Dict ===")
+            print(f"Username: {d.get('username')}")
+            print(f"Role: {d.get('role')}")
+            return d
+
+class UserCreate(BaseModel):
+    username: str
+    email: EmailStr
     password: str
     role: Optional[str] = "user"  # Default to "user" if not provided
 
@@ -22,13 +44,7 @@ class TokenData(BaseModel):
     email: Optional[str] = None
 
 class UserResponse(UserBase):
-    id: int
-    role: str
-    created_at: datetime
-    updated_at: datetime
-
-    class Config:
-        from_attributes = True
+    pass
 
 class UserUpdate(BaseModel):
     username: Optional[str] = None

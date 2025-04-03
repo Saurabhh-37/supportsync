@@ -57,6 +57,17 @@ const TicketManagement = () => {
         response = await ticketService.getUserTickets(currentUser.id);
       }
       
+      console.log('Fetched tickets:', response); // Debug log
+      // Add detailed logging for each ticket
+      response.forEach(ticket => {
+        console.log(`\nTicket ${ticket.id}:`);
+        console.log('  Title:', ticket.title);
+        console.log('  User:', ticket.user);
+        console.log('  User ID:', ticket.user_id);
+        console.log('  Assigned User:', ticket.assigned_user);
+        console.log('  Assigned To ID:', ticket.assigned_to);
+      });
+      
       setTickets(response);
     } catch (err) {
       const errorMessage = err.detail || err.message || 'Failed to fetch tickets';
@@ -258,7 +269,12 @@ const TicketManagement = () => {
                       size="small"
                     />
                   </TableCell>
-                  {isAdmin && <TableCell>{ticket.user?.username || 'Unknown'}</TableCell>}
+                  {isAdmin && (
+                    <TableCell>
+                      {console.log('Ticket user data:', ticket.user)} {/* Debug log */}
+                      {ticket.user?.username || 'Unknown'}
+                    </TableCell>
+                  )}
                   {isAdmin && (
                     <TableCell>
                       {selectedTicket === ticket.id ? (
@@ -295,7 +311,7 @@ const TicketManagement = () => {
                       ) : (
                         <Box sx={{ display: 'flex', alignItems: 'center', gap: 1 }}>
                           <Typography>
-                            {ticket.assigned_to || 'Unassigned'}
+                            {ticket.assigned_user?.username || 'Unassigned'}
                           </Typography>
                           <Tooltip title="Assign Agent">
                             <IconButton

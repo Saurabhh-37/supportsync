@@ -1,5 +1,5 @@
 from fastapi import APIRouter, Depends, HTTPException, Query, status
-from sqlalchemy.orm import Session
+from sqlalchemy.orm import Session, joinedload
 from sqlalchemy import or_
 from typing import List, Optional
 from app.database import get_db
@@ -24,8 +24,11 @@ def search_tickets(
     current_user: User = Depends(get_current_user)
 ):
     """Search tickets by title, description, or user"""
-    # Base query
-    search_query = db.query(Ticket)
+    # Base query with eager loading of user relationships
+    search_query = db.query(Ticket).options(
+        joinedload(Ticket.user),
+        joinedload(Ticket.assigned_user)
+    )
     
     # Apply search filter
     search_filter = or_(
@@ -48,6 +51,10 @@ def search_tickets(
     # Apply pagination
     total = search_query.count()
     tickets = search_query.offset(skip).limit(limit).all()
+    
+    # Debug log to check user relationships
+    for ticket in tickets:
+        print(f"Searched Ticket {ticket.id}: user={ticket.user.username if ticket.user else None}, assigned_user={ticket.assigned_user.username if ticket.assigned_user else None}")
     
     return tickets
 

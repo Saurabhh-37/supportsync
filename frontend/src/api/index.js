@@ -37,7 +37,13 @@ api.interceptors.response.use(
   (response) => {
     console.log('Response:', {
       status: response.status,
-      data: response.data
+      data: response.data,
+      headers: response.headers,
+      config: {
+        url: response.config.url,
+        method: response.config.method,
+        params: response.config.params
+      }
     });
     return response;
   },
@@ -45,7 +51,12 @@ api.interceptors.response.use(
     console.error('Response error:', {
       status: error.response?.status,
       data: error.response?.data,
-      message: error.message
+      message: error.message,
+      config: {
+        url: error.config?.url,
+        method: error.config?.method,
+        params: error.config?.params
+      }
     });
     return Promise.reject(error);
   }

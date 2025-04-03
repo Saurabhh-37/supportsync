@@ -19,7 +19,7 @@ class User(Base):
     created_tickets = relationship(
         "Ticket",
         back_populates="user",
-        foreign_keys="Ticket.user_id",
+        foreign_keys="[Ticket.user_id]",
         cascade="all, delete"
     )
     
@@ -27,7 +27,7 @@ class User(Base):
     assigned_tickets = relationship(
         "Ticket",
         back_populates="assigned_user",
-        foreign_keys="Ticket.assigned_to",
+        foreign_keys="[Ticket.assigned_to]",
         cascade="all, delete"
     )
     

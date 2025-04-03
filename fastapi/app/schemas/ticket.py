@@ -2,6 +2,7 @@ from pydantic import BaseModel, Field
 from datetime import datetime
 from typing import Optional, List, TYPE_CHECKING
 from enum import Enum
+from app.schemas.user import UserBase
 
 class Priority(str, Enum):
     LOW = "low"
@@ -13,14 +14,6 @@ class Status(str, Enum):
     IN_PROGRESS = "in_progress"
     RESOLVED = "resolved"
     CLOSED = "closed"
-
-class UserBase(BaseModel):
-    id: int
-    username: str
-    email: str
-
-    class Config:
-        from_attributes = True
 
 class TicketBase(BaseModel):
     title: str = Field(..., min_length=1, max_length=200)
@@ -49,6 +42,18 @@ class TicketResponse(TicketBase):
 
     class Config:
         from_attributes = True
+        populate_by_name = True
+        json_encoders = {
+            datetime: lambda v: v.isoformat()
+        }
+        
+        # Add debug logging for model creation
+        def dict(self, *args, **kwargs):
+            d = super().dict(*args, **kwargs)
+            print(f"\n=== TicketResponse Dict ===")
+            print(f"User: {d.get('user')}")
+            print(f"Assigned User: {d.get('assigned_user')}")
+            return d
 
 # Import CommentResponse here to avoid circular import
 from app.schemas.comment import CommentResponse
@@ -58,3 +63,4 @@ class TicketWithComments(TicketResponse):
 
     class Config:
         from_attributes = True
+        populate_by_name = True

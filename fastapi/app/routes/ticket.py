@@ -1,5 +1,5 @@
 from fastapi import APIRouter, Depends, HTTPException, Query, status
-from sqlalchemy.orm import Session
+from sqlalchemy.orm import Session, joinedload
 from sqlalchemy import or_
 from typing import List, Optional
 from jose import JWTError, jwt
@@ -46,8 +46,17 @@ def create_ticket(
     )
     db.add(new_ticket)
     db.commit()
-    db.refresh(new_ticket)
-    return new_ticket
+    
+    # Eagerly load user relationships
+    ticket = db.query(Ticket).options(
+        joinedload(Ticket.user),
+        joinedload(Ticket.assigned_user)
+    ).filter(Ticket.id == new_ticket.id).first()
+    
+    # Debug log to check user relationships
+    print(f"Created Ticket {ticket.id}: user={ticket.user.username if ticket.user else None}, assigned_user={ticket.assigned_user.username if ticket.assigned_user else None}")
+    
+    return ticket
 
 @router.get("/tickets", response_model=List[TicketResponse])
 def get_tickets(
@@ -61,7 +70,14 @@ def get_tickets(
     current_user: User = Depends(get_current_user)
 ):
     """Get tickets with filtering and pagination"""
-    query = db.query(Ticket)
+    print("\n=== Starting get_tickets endpoint ===")
+    print(f"Current user: {current_user.username} (ID: {current_user.id})")
+    
+    # Start with base query and eagerly load user relationships
+    query = db.query(Ticket).options(
+        joinedload(Ticket.user),
+        joinedload(Ticket.assigned_user)
+    )
     
     # Apply filters based on user role
     if current_user.role != "admin":
@@ -83,13 +99,27 @@ def get_tickets(
     
     # Apply pagination
     total = query.count()
+    print(f"Total tickets found: {total}")
+    
     tickets = query.offset(skip).limit(limit).all()
     
-    # Load user relationships
+    # Detailed debug logging for each ticket
+    print("\n=== Ticket Data Being Sent to Frontend ===")
     for ticket in tickets:
-        ticket.user = db.query(User).filter(User.id == ticket.user_id).first()
-        if ticket.assigned_to:
-            ticket.assigned_user = db.query(User).filter(User.id == ticket.assigned_to).first()
+        print(f"\nTicket {ticket.id}:")
+        print(f"  Title: {ticket.title}")
+        print(f"  Creator ID: {ticket.user_id}")
+        print(f"  Creator Object: {ticket.user}")
+        print(f"  Creator Username: {ticket.user.username if ticket.user else 'None'}")
+        print(f"  Assigned To ID: {ticket.assigned_to}")
+        print(f"  Assigned User Object: {ticket.assigned_user}")
+        print(f"  Assigned Username: {ticket.assigned_user.username if ticket.assigned_user else 'None'}")
+        print(f"  Status: {ticket.status}")
+        print(f"  Priority: {ticket.priority}")
+        
+        # Debug the SQL query
+        print("\n  SQL Query:")
+        print(query.statement.compile(compile_kwargs={"literal_binds": True}))
     
     return tickets
 
@@ -104,7 +134,10 @@ def get_my_tickets(
     current_user: User = Depends(get_current_user)
 ):
     """Get tickets created by the current user, or all tickets if user is admin"""
-    query = db.query(Ticket)
+    query = db.query(Ticket).options(
+        joinedload(Ticket.user),
+        joinedload(Ticket.assigned_user)
+    )
     
     # Only filter by user_id if the user is not an admin
     if current_user.role != "admin":
@@ -126,12 +159,6 @@ def get_my_tickets(
     total = query.count()
     tickets = query.offset(skip).limit(limit).all()
     
-    # Load user relationships
-    for ticket in tickets:
-        ticket.user = db.query(User).filter(User.id == ticket.user_id).first()
-        if ticket.assigned_to:
-            ticket.assigned_user = db.query(User).filter(User.id == ticket.assigned_to).first()
-    
     return tickets
 
 @router.get("/tickets/assigned", response_model=List[TicketResponse])
@@ -145,7 +172,10 @@ def get_assigned_tickets(
     current_user: User = Depends(get_current_user)
 ):
     """Get tickets assigned to the current user"""
-    query = db.query(Ticket).filter(Ticket.assigned_to == current_user.id)
+    query = db.query(Ticket).options(
+        joinedload(Ticket.user),
+        joinedload(Ticket.assigned_user)
+    ).filter(Ticket.assigned_to == current_user.id)
     
     # Apply filters
     if status:
@@ -172,7 +202,11 @@ def get_ticket(
     current_user: User = Depends(get_current_user)
 ):
     """Get a specific ticket by ID"""
-    ticket = db.query(Ticket).filter(Ticket.id == ticket_id).first()
+    # Start with base query and eagerly load user relationships
+    ticket = db.query(Ticket).options(
+        joinedload(Ticket.user),
+        joinedload(Ticket.assigned_user)
+    ).filter(Ticket.id == ticket_id).first()
     
     if not ticket:
         raise HTTPException(
@@ -187,12 +221,24 @@ def get_ticket(
             detail="Not enough permissions"
         )
     
-    # Load the assigned user relationship
-    if ticket.assigned_to:
-        ticket.assigned_user = db.query(User).filter(User.id == ticket.assigned_to).first()
+    # Detailed debug logging for the ticket
+    print(f"\nTicket {ticket.id}:")
+    print(f"  Title: {ticket.title}")
+    print(f"  Creator: {ticket.user.username if ticket.user else 'None'}")
+    print(f"  Creator ID: {ticket.user_id}")
+    print(f"  Assigned To: {ticket.assigned_user.username if ticket.assigned_user else 'None'}")
+    print(f"  Assigned To ID: {ticket.assigned_to}")
+    print(f"  Status: {ticket.status}")
+    print(f"  Priority: {ticket.priority}")
+    print(f"  Description: {ticket.description}")
     
-    # Load the user who created the ticket
-    ticket.user = db.query(User).filter(User.id == ticket.user_id).first()
+    # Debug logging for comments
+    print("\nComments:")
+    for comment in ticket.comments:
+        print(f"  Comment {comment.id}:")
+        print(f"    Content: {comment.content}")
+        print(f"    User: {comment.user.username if comment.user else 'None'}")
+        print(f"    User ID: {comment.user_id}")
     
     return ticket
 
@@ -204,7 +250,10 @@ def update_ticket(
     current_user: User = Depends(get_current_user)
 ):
     """Update a ticket"""
-    ticket = db.query(Ticket).filter(Ticket.id == ticket_id).first()
+    ticket = db.query(Ticket).options(
+        joinedload(Ticket.user),
+        joinedload(Ticket.assigned_user)
+    ).filter(Ticket.id == ticket_id).first()
     
     if not ticket:
         raise HTTPException(
@@ -224,16 +273,18 @@ def update_ticket(
     for key, value in update_data.items():
         setattr(ticket, key, value)
     
-    # Load the assigned user relationship
-    if ticket.assigned_to:
-        ticket.assigned_user = db.query(User).filter(User.id == ticket.assigned_to).first()
-    
-    # Load the user who created the ticket
-    ticket.user = db.query(User).filter(User.id == ticket.user_id).first()
-    
     db.commit()
-    db.refresh(ticket)
-    return ticket
+    
+    # Reload the ticket with eager loading of relationships
+    updated_ticket = db.query(Ticket).options(
+        joinedload(Ticket.user),
+        joinedload(Ticket.assigned_user)
+    ).filter(Ticket.id == ticket_id).first()
+    
+    # Debug log to check user relationships
+    print(f"Updated Ticket {updated_ticket.id}: user={updated_ticket.user.username if updated_ticket.user else None}, assigned_user={updated_ticket.assigned_user.username if updated_ticket.assigned_user else None}")
+    
+    return updated_ticket
 
 @router.delete("/tickets/{ticket_id}")
 def delete_ticket(

@@ -290,6 +290,15 @@ const TicketDetail = () => {
 
           <Grid item xs={12} sm={6} md={3}>
             <Typography variant="body2" color="text.secondary">
+              Created By
+            </Typography>
+            <Typography>
+              {ticket.user?.username || 'Unknown'}
+            </Typography>
+          </Grid>
+
+          <Grid item xs={12} sm={6} md={3}>
+            <Typography variant="body2" color="text.secondary">
               Assigned To
             </Typography>
             {currentUser.role === 'admin' ? (
@@ -316,19 +325,12 @@ const TicketDetail = () => {
               </FormControl>
             ) : (
               <Typography>
-                {ticket.assigned_to ? adminUsers.find(admin => admin.id === ticket.assigned_to)?.username || 'Unknown' : 'Unassigned'}
+                {ticket.assigned_user?.username || 'Unassigned'}
               </Typography>
             )}
           </Grid>
 
           <Grid item xs={12} sm={6} md={3}>
-            <Typography variant="body2" color="text.secondary">
-              Created by
-            </Typography>
-            <Typography>{ticket.user?.username || 'Unknown'}</Typography>
-          </Grid>
-
-          <Grid item xs={12}>
             <Typography variant="body2" color="text.secondary">
               Created at: {new Date(ticket.created_at).toLocaleString()}
             </Typography>

@@ -85,6 +85,12 @@ def get_tickets(
     total = query.count()
     tickets = query.offset(skip).limit(limit).all()
     
+    # Load user relationships
+    for ticket in tickets:
+        ticket.user = db.query(User).filter(User.id == ticket.user_id).first()
+        if ticket.assigned_to:
+            ticket.assigned_user = db.query(User).filter(User.id == ticket.assigned_to).first()
+    
     return tickets
 
 @router.get("/tickets/me", response_model=List[TicketResponse])
@@ -119,6 +125,12 @@ def get_my_tickets(
     # Apply pagination
     total = query.count()
     tickets = query.offset(skip).limit(limit).all()
+    
+    # Load user relationships
+    for ticket in tickets:
+        ticket.user = db.query(User).filter(User.id == ticket.user_id).first()
+        if ticket.assigned_to:
+            ticket.assigned_user = db.query(User).filter(User.id == ticket.assigned_to).first()
     
     return tickets
 

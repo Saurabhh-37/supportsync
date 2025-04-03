@@ -86,11 +86,22 @@ const TicketDetail = () => {
       setLoading(true);
       const response = await API.get(`/api/tickets/${id}`);
       const ticketData = response.data;
-      console.log('Ticket data:', ticketData); // Debug log
+      console.log('Full ticket data:', ticketData);
+
+      // Fetch user details if we have user_id
+      if (ticketData.user_id) {
+        try {
+          const userResponse = await API.get(`/api/auth/users/${ticketData.user_id}`);
+          ticketData.user = userResponse.data;
+        } catch (error) {
+          console.error('Error fetching user details:', error);
+          ticketData.user = { username: 'Unknown' };
+        }
+      }
+
       setTicket(ticketData);
       setStatus(ticketData.status);
       setPriority(ticketData.priority);
-      // Set the selected admin from the assigned_to field
       setSelectedAdmin(ticketData.assigned_to || '');
       setComments(ticketData.comments || []);
       setError(null);
@@ -289,18 +300,24 @@ const TicketDetail = () => {
           </Grid>
 
           <Grid item xs={12} sm={6} md={3}>
-            <Typography variant="body2" color="text.secondary">
-              Created By
-            </Typography>
-            <Typography>
-              {ticket.user?.username || 'Unknown'}
-            </Typography>
+            <FormControl fullWidth>
+              <InputLabel>Created By</InputLabel>
+              <Select 
+                value={ticket?.user?.id || ''} 
+                disabled
+                label="Created By"
+              >
+                <MenuItem value={ticket?.user?.id || ''}>
+                  {ticket?.user?.username || 'Unknown'}
+                </MenuItem>
+              </Select>
+            </FormControl>
           </Grid>
 
           <Grid item xs={12} sm={6} md={3}>
-            <Typography variant="body2" color="text.secondary">
+            {/* <Typography variant="body2" color="text.secondary">
               Assigned To
-            </Typography>
+            </Typography> */}
             {currentUser.role === 'admin' ? (
               <FormControl fullWidth disabled={!canEditTicket || updating}>
                 <InputLabel>Change Assignment</InputLabel>

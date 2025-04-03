@@ -35,29 +35,17 @@ api.interceptors.request.use(
 // Add response interceptor for logging
 api.interceptors.response.use(
   (response) => {
-    console.log('Response:', {
-      status: response.status,
-      data: response.data,
-      headers: response.headers,
-      config: {
-        url: response.config.url,
-        method: response.config.method,
-        params: response.config.params
-      }
-    });
+    console.log('\n=== API Response ===');
+    console.log('URL:', response.config.url);
+    console.log('Status:', response.status);
+    console.log('Data:', JSON.stringify(response.data, null, 2));
     return response;
   },
   (error) => {
-    console.error('Response error:', {
-      status: error.response?.status,
-      data: error.response?.data,
-      message: error.message,
-      config: {
-        url: error.config?.url,
-        method: error.config?.method,
-        params: error.config?.params
-      }
-    });
+    console.error('\n=== API Error ===');
+    console.error('URL:', error.config?.url);
+    console.error('Status:', error.response?.status);
+    console.error('Data:', error.response?.data);
     return Promise.reject(error);
   }
 );

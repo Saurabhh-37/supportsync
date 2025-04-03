@@ -5,9 +5,8 @@ from typing import Optional
 class UserBase(BaseModel):
     id: int
     username: str
-    email: EmailStr
+    email: str
     role: str
-    is_active: bool = True
     created_at: datetime
     updated_at: datetime
 
@@ -17,14 +16,13 @@ class UserBase(BaseModel):
         json_encoders = {
             datetime: lambda v: v.isoformat()
         }
-        
-        # Add debug logging for model creation
-        def dict(self, *args, **kwargs):
-            d = super().dict(*args, **kwargs)
-            print(f"\n=== UserBase Dict ===")
-            print(f"Username: {d.get('username')}")
-            print(f"Role: {d.get('role')}")
-            return d
+
+    def dict(self, *args, **kwargs):
+        d = super().dict(*args, **kwargs)
+        print(f"\n=== UserBase Serialization ===")
+        print(f"Username: {d.get('username')}")
+        print(f"Role: {d.get('role')}")
+        return d
 
 class UserCreate(BaseModel):
     username: str

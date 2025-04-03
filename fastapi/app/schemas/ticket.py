@@ -31,14 +31,18 @@ class TicketUpdate(BaseModel):
     status: Optional[Status] = None
     assigned_to: Optional[int] = None
 
-class TicketResponse(TicketBase):
+class TicketResponse(BaseModel):
     id: int
+    title: str
+    description: str
+    priority: str
+    status: str
     created_at: datetime
     updated_at: datetime
     user_id: int
     assigned_to: Optional[int] = None
+    user: UserBase
     assigned_user: Optional[UserBase] = None
-    user: Optional[UserBase] = None
 
     class Config:
         from_attributes = True
@@ -46,14 +50,13 @@ class TicketResponse(TicketBase):
         json_encoders = {
             datetime: lambda v: v.isoformat()
         }
-        
-        # Add debug logging for model creation
-        def dict(self, *args, **kwargs):
-            d = super().dict(*args, **kwargs)
-            print(f"\n=== TicketResponse Dict ===")
-            print(f"User: {d.get('user')}")
-            print(f"Assigned User: {d.get('assigned_user')}")
-            return d
+
+    def dict(self, *args, **kwargs):
+        d = super().dict(*args, **kwargs)
+        print(f"\n=== TicketResponse Serialization ===")
+        print(f"User data: {d.get('user')}")
+        print(f"Assigned user data: {d.get('assigned_user')}")
+        return d
 
 # Import CommentResponse here to avoid circular import
 from app.schemas.comment import CommentResponse

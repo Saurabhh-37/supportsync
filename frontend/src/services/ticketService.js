@@ -80,7 +80,7 @@ const ticketService = {
   getUserTickets: async (userId, params = {}) => {
     try {
       console.log('Fetching tickets for user:', userId);
-      const response = await api.get(`/api/tickets/user/${userId}`, { params });
+      const response = await api.get('/api/tickets/me', { params });
       console.log('User tickets fetched successfully:', response.data);
       return response.data;
     } catch (error) {

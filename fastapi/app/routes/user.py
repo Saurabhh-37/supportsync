@@ -14,6 +14,7 @@ from app.utils.security import (
 )
 from datetime import timedelta
 from typing import List
+from app.models.ticket import Ticket
 
 # Create main router and auth subrouter
 router = APIRouter()
@@ -113,6 +114,21 @@ def get_users(
     print(f"Returning {len(users)} users")  # Debug log
     return users
 
+@auth_router.get("/users/{user_id}", response_model=UserResponse)
+def get_user_by_id(
+    user_id: int,
+    db: Session = Depends(get_db),
+    current_user: User = Depends(get_current_active_user)
+):
+    """Get a single user by ID"""
+    user = db.query(User).filter(User.id == user_id).first()
+    if not user:
+        raise HTTPException(
+            status_code=status.HTTP_404_NOT_FOUND,
+            detail="User not found"
+        )
+    return user
+
 @auth_router.post("/users", response_model=UserResponse)
 def create_user(
     user: UserCreate,
@@ -204,20 +220,32 @@ def update_user(
     db.refresh(user)
     return user
 
-@auth_router.get("/users/{user_id}", response_model=UserResponse)
-def get_user_by_id(
+@auth_router.delete("/users/{user_id}")
+def delete_user(
     user_id: int,
     db: Session = Depends(get_db),
     current_user: User = Depends(get_current_active_user)
 ):
-    """Get a user by ID"""
+    """Delete a user (admin only)"""
+    if current_user.role != "admin":
+        raise HTTPException(
+            status_code=status.HTTP_403_FORBIDDEN,
+            detail="Not enough permissions"
+        )
+
     user = db.query(User).filter(User.id == user_id).first()
     if not user:
         raise HTTPException(
             status_code=status.HTTP_404_NOT_FOUND,
             detail="User not found"
         )
-    return user
+
+    db.delete(user)
+    db.commit()
+    return {"message": "User deleted successfully"}
+
+# Include auth router in main router
+router.include_router(auth_router, prefix="/api/auth", tags=["auth"])
 
 # Export both routers
 __all__ = ["router", "auth_router"]

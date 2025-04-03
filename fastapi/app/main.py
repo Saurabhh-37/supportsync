@@ -7,7 +7,7 @@ from app.database import engine, Base, init_db
 Base.metadata.create_all(bind=engine)
 
 # Initialize FastAPI app
-app = FastAPI(
+app = FastAPI(  
     title="SupportSync API",
     description="A ticketing system API with user management and feature requests",
     version="1.0.0"

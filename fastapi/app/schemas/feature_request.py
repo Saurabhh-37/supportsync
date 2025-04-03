@@ -2,7 +2,6 @@ from pydantic import BaseModel, Field
 from typing import List, Optional
 from datetime import datetime
 from enum import Enum
-from app.schemas.user import UserBase
 
 class FeatureRequestStatus(str, Enum):
     PROPOSED = "Proposed"
@@ -50,7 +49,6 @@ class FeatureRequestResponse(FeatureRequestBase):
     created_at: datetime
     updated_at: Optional[datetime] = None
     requester_id: int
-    requester: Optional[UserBase] = None
     upvotes_count: int
     comments: List[FeatureRequestCommentResponse] = []
 

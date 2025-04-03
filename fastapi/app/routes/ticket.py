@@ -85,12 +85,6 @@ def get_tickets(
     total = query.count()
     tickets = query.offset(skip).limit(limit).all()
     
-    # Load user relationships
-    for ticket in tickets:
-        ticket.user = db.query(User).filter(User.id == ticket.user_id).first()
-        if ticket.assigned_to:
-            ticket.assigned_user = db.query(User).filter(User.id == ticket.assigned_to).first()
-    
     return tickets
 
 @router.get("/tickets/me", response_model=List[TicketResponse])
@@ -103,12 +97,8 @@ def get_my_tickets(
     db: Session = Depends(get_db),
     current_user: User = Depends(get_current_user)
 ):
-    """Get tickets created by the current user, or all tickets if user is admin"""
-    query = db.query(Ticket)
-    
-    # Only filter by user_id if the user is not an admin
-    if current_user.role != "admin":
-        query = query.filter(Ticket.user_id == current_user.id)
+    """Get tickets created by the current user"""
+    query = db.query(Ticket).filter(Ticket.user_id == current_user.id)
     
     # Apply filters
     if status:
@@ -125,12 +115,6 @@ def get_my_tickets(
     # Apply pagination
     total = query.count()
     tickets = query.offset(skip).limit(limit).all()
-    
-    # Load user relationships
-    for ticket in tickets:
-        ticket.user = db.query(User).filter(User.id == ticket.user_id).first()
-        if ticket.assigned_to:
-            ticket.assigned_user = db.query(User).filter(User.id == ticket.assigned_to).first()
     
     return tickets
 
@@ -187,13 +171,6 @@ def get_ticket(
             detail="Not enough permissions"
         )
     
-    # Load the assigned user relationship
-    if ticket.assigned_to:
-        ticket.assigned_user = db.query(User).filter(User.id == ticket.assigned_to).first()
-    
-    # Load the user who created the ticket
-    ticket.user = db.query(User).filter(User.id == ticket.user_id).first()
-    
     return ticket
 
 @router.put("/tickets/{ticket_id}", response_model=TicketResponse)
@@ -223,13 +200,6 @@ def update_ticket(
     update_data = ticket_data.dict(exclude_unset=True)
     for key, value in update_data.items():
         setattr(ticket, key, value)
-    
-    # Load the assigned user relationship
-    if ticket.assigned_to:
-        ticket.assigned_user = db.query(User).filter(User.id == ticket.assigned_to).first()
-    
-    # Load the user who created the ticket
-    ticket.user = db.query(User).filter(User.id == ticket.user_id).first()
     
     db.commit()
     db.refresh(ticket)

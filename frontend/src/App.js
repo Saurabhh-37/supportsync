@@ -10,7 +10,6 @@ import Login from './pages/Login';
 import SignupPage from './pages/Signup';
 import ProtectedRoute from './components/auth/ProtectedRoute';
 import PublicRoute from './components/auth/PublicRoute';
-import AuthProvider from './components/auth/AuthProvider';
 
 // Layout Components
 import Layout from './components/layout/Layout';
@@ -33,74 +32,72 @@ function App() {
       <ThemeProvider theme={theme}>
         <CssBaseline />
         <Router>
-          <AuthProvider>
-            <Routes>
-              {/* Public Routes */}
-              <Route
-                path="/login"
-                element={
-                  <PublicRoute>
-                    <Login />
-                  </PublicRoute>
-                }
-              />
-              <Route
-                path="/signup"
-                element={
-                  <PublicRoute>
-                    <SignupPage />
-                  </PublicRoute>
-                }
-              />
+          <Routes>
+            {/* Public Routes */}
+            <Route
+              path="/login"
+              element={
+                <PublicRoute>
+                  <Login />
+                </PublicRoute>
+              }
+            />
+            <Route
+              path="/signup"
+              element={
+                <PublicRoute>
+                  <SignupPage />
+                </PublicRoute>
+              }
+            />
 
-              {/* Protected Routes */}
+            {/* Protected Routes */}
+            <Route
+              path="/"
+              element={
+                <ProtectedRoute>
+                  <Layout />
+                </ProtectedRoute>
+              }
+            >
+              <Route index element={<Navigate to="/dashboard" replace />} />
+              <Route path="dashboard" element={<Dashboard />} />
+              
+              {/* Ticket Routes */}
+              <Route path="tickets" element={<TicketList />} />
+              <Route path="tickets/create" element={<TicketCreate />} />
+              <Route path="tickets/:id" element={<TicketDetail />} />
+              
+              {/* Feature Request Routes */}
+              <Route path="feature-requests" element={<FeatureRequestList />} />
+              <Route path="feature-requests/create" element={<FeatureRequestCreate />} />
+              <Route path="feature-requests/:id" element={<FeatureRequestDetail />} />
+              
+              {/* Settings */}
+              <Route path="settings" element={<SettingsPage />} />
+              
+              {/* Admin Routes */}
               <Route
-                path="/"
+                path="users"
                 element={
-                  <ProtectedRoute>
-                    <Layout />
+                  <ProtectedRoute adminOnly>
+                    <UserManagementPage />
                   </ProtectedRoute>
                 }
-              >
-                <Route index element={<Navigate to="/dashboard" replace />} />
-                <Route path="dashboard" element={<Dashboard />} />
-                
-                {/* Ticket Routes */}
-                <Route path="tickets" element={<TicketList />} />
-                <Route path="tickets/create" element={<TicketCreate />} />
-                <Route path="tickets/:id" element={<TicketDetail />} />
-                
-                {/* Feature Request Routes */}
-                <Route path="feature-requests" element={<FeatureRequestList />} />
-                <Route path="feature-requests/create" element={<FeatureRequestCreate />} />
-                <Route path="feature-requests/:id" element={<FeatureRequestDetail />} />
-                
-                {/* Settings */}
-                <Route path="settings" element={<SettingsPage />} />
-                
-                {/* Admin Routes */}
-                <Route
-                  path="users"
-                  element={
-                    <ProtectedRoute adminOnly>
-                      <UserManagementPage />
-                    </ProtectedRoute>
-                  }
-                />
-                <Route
-                  path="admin"
-                  element={
-                    <ProtectedRoute adminOnly>
-                      <AdminPage />
-                    </ProtectedRoute>
-                  }
-                />
-              </Route>
+              />
+              <Route
+                path="admin"
+                element={
+                  <ProtectedRoute adminOnly>
+                    <AdminPage />
+                  </ProtectedRoute>
+                }
+              />
+            </Route>
 
-              {/* Catch all route */}
-              <Route path="*" element={<Navigate to="/dashboard" replace />} />
-            </Routes>
-          </AuthProvider>
+            {/* Catch all route */}
+            <Route path="*" element={<Navigate to="/dashboard" replace />} />
+          </Routes>
         </Router>
       </ThemeProvider>
     </Provider>

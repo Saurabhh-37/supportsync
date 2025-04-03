@@ -1,5 +1,4 @@
 import React, { useState, useEffect } from 'react';
-import { useNavigate } from 'react-router-dom';
 import {
   Box,
   Paper,
@@ -28,7 +27,6 @@ import { selectIsAdmin, selectCurrentUser } from '../../redux/userSlice';
 import ticketService from '../../services/ticketService';
 
 const TicketManagement = () => {
-  const navigate = useNavigate();
   const isAdmin = useSelector(selectIsAdmin);
   const currentUser = useSelector(selectCurrentUser);
   const [tickets, setTickets] = useState([]);
@@ -258,7 +256,7 @@ const TicketManagement = () => {
                       size="small"
                     />
                   </TableCell>
-                  {isAdmin && <TableCell>{ticket.user?.username || 'Unknown'}</TableCell>}
+                  {isAdmin && <TableCell>{ticket.created_by}</TableCell>}
                   {isAdmin && (
                     <TableCell>
                       {selectedTicket === ticket.id ? (
@@ -316,7 +314,7 @@ const TicketManagement = () => {
                     <Button
                       variant="outlined"
                       size="small"
-                      onClick={() => navigate(`/tickets/${ticket.id}`)}
+                      onClick={() => {/* Handle view details */}}
                     >
                       View
                     </Button>

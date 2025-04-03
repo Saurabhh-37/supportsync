@@ -205,6 +205,24 @@ const TicketList = () => {
                 </TableCell>
                 <TableCell align="right">
                   <Box sx={{ display: 'flex', justifyContent: 'flex-end', gap: 1 }}>
+                    <Tooltip title="Edit Ticket">
+                      <IconButton
+                        size="small"
+                        onClick={(event) => {
+                          event.stopPropagation();
+                          navigate(`/tickets/${ticket.id}/edit`);
+                        }}
+                        disabled={updating}
+                        sx={{
+                          color: 'primary.main',
+                          '&:hover': {
+                            backgroundColor: 'primary.light',
+                          },
+                        }}
+                      >
+                        <EditIcon />
+                      </IconButton>
+                    </Tooltip>
                     {isAgent && (
                       <Tooltip title="Delete Ticket">
                         <IconButton
